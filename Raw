@@ -1,0 +1,41 @@
+var="movie.MOV"
+sed -i "1s/.*/$var/" file.txt
+explanations
+
+1 mean first line
+the rest is the substitution s/// : we substitute everything (.*) by the $var variable
+
+
+Use
+
+sed '/#start/,/#end/replace_command'
+For example, if the file is called myconfig, and you want to replace "allow" with "deny" in that section, you could say
+
+sed '/#start/,/#end/s/allow/deny/' myconfig
+That would leave the file untouched, and display on the standard output what the file would look like after the modification.  You should probably do that first, to verify that you've got the command right.  If you want to actually change the file, add the -i option:
+
+sed -i '/#start/,/#end/s/allow/deny/' myconfig
+If you want to replace the whole text (all the text) between those two lines, you can do something slightly simpler than Lucas's answer:
+
+sed '/#start/,/#end/c\
+New text line 1\
+New text line 2\
+        ︙      \
+New text line n-1\
+New text line n (last)'                                   ← Close quote; no backslash here
+c is the change command in sed (and ed); it means "replace entire line(s)".  You cannot simply leave the #start and #end lines untouched.  If you want to keep them, you must re-insert them:
+
+sed -i '/#start/,/#end/c\
+#start\
+FirewallRuleSet global {\
+    FirewallRule allow tcp to google.com\
+    FirewallRule deny tcp to facebook.com\
+                      ︙                 \
+\
+#more rules\
+}\
+#end' myconfig
+/#start/,/#end/ specifies a range — the lines from the first line that contains #start through the first line after that that contains #end.  If you need to find lines that contain those strings and nothing else, use /^#start$/,/^#end$/.
+
+
+https://unix.stackexchange.com/questions/272061/bash-sh-script-to-replace-text-between-some-tags-strings-in-a-text-file
